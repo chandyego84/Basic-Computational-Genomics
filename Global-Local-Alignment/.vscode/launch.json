@@ -5,10 +5,10 @@
             "name": "C Program",
             "type": "cppdbg",
             "request": "launch",
-            "program": "C:/Users/chand/CPTS_471/PA1/main.exe",
+            "program": "C:/Users/chand/CPTS_471/Global-Local-Alignment/sequence_alignment.exe",
             "args": [],
             "stopAtEntry": false,
-            "cwd": "C:/Users/chand/CPTS_471/PA1/",
+            "cwd": "C:/Users/chand/CPTS_471/Global-Local-Alignment/",
             "environment": [],
             "externalConsole": false,
             "MIMode": "gdb",
@@ -26,7 +26,5 @@
                 }
             ]
         },
-        {
-        }
     ]
 }
