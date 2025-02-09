@@ -11,6 +11,73 @@ int parse_alignment_type(const char *arg) {
     return atoi(arg);
 }
 
+char** read_sequence_inputs(const char *filename, const size_t num_seq) {
+    FILE *file = fopen(filename, "r");
+    if (!file) {
+        perror("Error opening sequence inputs file");
+        exit(1);
+    }
+
+    char line[256]; // buffer to hold each line from file
+    int curr_sequence = -1; // current sequence being processed
+    char **sequences = (char**)malloc(num_seq * sizeof(char*)); // array of sequence strings
+
+    if (sequences == NULL) {
+        perror("Failed to allocate memory for sequences array");
+        fclose(file);
+        exit(1);
+    }
+    
+    // init all sequences in sequences array
+    for (size_t i = 0; i < num_seq; i++) {
+        sequences[i] = (char*)malloc(INITIAL_MAX_SEQ_SIZE * sizeof(char));
+        if (sequences[i] == NULL) {
+            perror("Failed to allocate memory for a sequence");
+            fclose(file);
+            exit(1);
+        }
+        sequences[i][0] = '\0'; // empty string initialization
+    }
+    
+    while (fgets(line, sizeof(line), file)) {
+        if (line[0] == '>') {
+            // skip
+            curr_sequence++;
+            continue;
+        }
+
+        if (curr_sequence < num_seq) {
+            size_t line_len = strlen(line);
+
+            // check if there is a newline char and replace with null terminator
+            if (line_len > 0 && line[line_len - 1] == '\n') {
+                line[line_len - 1] = '\0';
+            }
+    
+            size_t curr_seq_len = strlen(sequences[curr_sequence]);
+            size_t curr_size = sizeof(sequences[curr_sequence]);
+            size_t needed_size = (curr_seq_len + line_len) * sizeof(char);
+
+            // if current sequence does not have enough space, reallocate
+            if (curr_size < needed_size) {
+                char *seq = (char*)realloc(sequences[curr_sequence], needed_size * 2);
+                if (seq == NULL) {
+                    perror("Failed to realloc memory for a sequence");
+                    fclose(file);
+                    exit(1);
+                }
+
+                sequences[curr_sequence] = seq;
+            }
+
+            strcat(sequences[curr_sequence], line); // add new line to the sequence
+        }
+    }
+
+    fclose(file);
+    return sequences;
+}
+
 void read_configs(const char *filename, int *match, int *mismatch, int *gap_open, int *gap_ext) {
     FILE *file = fopen(filename, "r");
     if (!file) {
