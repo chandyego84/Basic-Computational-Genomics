@@ -21,16 +21,25 @@ char** read_sequence_inputs(const char *filename, const size_t num_seq) {
     char line[256]; // buffer to hold each line from file
     int curr_sequence = -1; // current sequence being processed
     char **sequences = (char**)malloc(num_seq * sizeof(char*)); // array of sequence strings
+    size_t *allocated_sizes = (size_t*)malloc(num_seq * sizeof(size_t)); // track allocated memory for each sequence
 
     if (sequences == NULL) {
         perror("Failed to allocate memory for sequences array");
         fclose(file);
         exit(1);
     }
+
+    if (allocated_sizes == NULL) {
+        perror("Failed to allocate memory for allocated_sizes");
+        fclose(file);
+        exit(1);
+    }
     
     // init all sequences in sequences array
     for (size_t i = 0; i < num_seq; i++) {
-        sequences[i] = (char*)malloc(INITIAL_MAX_SEQ_SIZE * sizeof(char));
+        size_t initial_size = INITIAL_MAX_SEQ_SIZE * sizeof(char);
+        sequences[i] = (char*)malloc(initial_size);
+        allocated_sizes[i] = initial_size;
         if (sequences[i] == NULL) {
             perror("Failed to allocate memory for a sequence");
             fclose(file);
@@ -55,12 +64,13 @@ char** read_sequence_inputs(const char *filename, const size_t num_seq) {
             }
     
             size_t curr_seq_len = strlen(sequences[curr_sequence]);
-            size_t curr_size = sizeof(sequences[curr_sequence]);
+            size_t curr_size = allocated_sizes[curr_sequence];
             size_t needed_size = (curr_seq_len + line_len) * sizeof(char);
+            size_t realloc_size = needed_size * 2;
 
             // if current sequence does not have enough space, reallocate
             if (curr_size < needed_size) {
-                char *seq = (char*)realloc(sequences[curr_sequence], needed_size * 2);
+                char *seq = (char*)realloc(sequences[curr_sequence], realloc_size);
                 if (seq == NULL) {
                     perror("Failed to realloc memory for a sequence");
                     fclose(file);
@@ -68,12 +78,14 @@ char** read_sequence_inputs(const char *filename, const size_t num_seq) {
                 }
 
                 sequences[curr_sequence] = seq;
+                allocated_sizes[curr_sequence] = realloc_size;
             }
 
             strcat(sequences[curr_sequence], line); // add new line to the sequence
         }
     }
 
+    free(allocated_sizes);
     fclose(file);
     return sequences;
 }
