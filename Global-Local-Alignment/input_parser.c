@@ -11,77 +11,83 @@ int parse_alignment_type(const char *arg) {
     return atoi(arg);
 }
 
-char** read_sequence_inputs(const char *filename, const size_t num_seq) {
+Sequence* read_sequence_inputs(const char *filename, const size_t num_seq) {
     FILE *file = fopen(filename, "r");
     if (!file) {
-        perror("Error opening sequence inputs file");
+        perror("Error opening file");
         exit(1);
     }
 
-    char line[256]; // buffer to hold each line from file
-    int curr_sequence = -1; // current sequence being processed
-    char **sequences = (char**)malloc(num_seq * sizeof(char*)); // array of sequence strings
+    Sequence *sequences = (Sequence*)malloc(num_seq * sizeof(Sequence)); // array of sequence strings
     size_t *allocated_sizes = (size_t*)malloc(num_seq * sizeof(size_t)); // track allocated memory for each sequence
 
-    if (sequences == NULL) {
-        perror("Failed to allocate memory for sequences array");
+    if (!sequences || !allocated_sizes) {
+        perror("Memory allocation failed");
         fclose(file);
         exit(1);
     }
 
-    if (allocated_sizes == NULL) {
-        perror("Failed to allocate memory for allocated_sizes");
-        fclose(file);
-        exit(1);
-    }
-    
-    // init all sequences in sequences array
+    // init sequences
     for (size_t i = 0; i < num_seq; i++) {
-        size_t initial_size = INITIAL_MAX_SEQ_SIZE * sizeof(char);
-        sequences[i] = (char*)malloc(initial_size);
-        allocated_sizes[i] = initial_size;
-        if (sequences[i] == NULL) {
-            perror("Failed to allocate memory for a sequence");
+        size_t initial_seq_size = INITIAL_MAX_SEQ_LEN * sizeof(char); // in BYTES
+
+        sequences[i].name = NULL;
+        sequences[i].sequence = (char*)malloc(initial_seq_size);
+        allocated_sizes[i] = initial_seq_size;
+
+        if (!sequences[i].sequence) {
+            perror("Failed to allocate sequence memory");
             fclose(file);
             exit(1);
         }
-        sequences[i][0] = '\0'; // empty string initialization
+
+        sequences[i].sequence[0] = '\0';
     }
-    
+
+    int curr_seq = -1; // current sequence being processed
+    char line[256]; // buffer to hold current line being read
+
     while (fgets(line, sizeof(line), file)) {
         if (line[0] == '>') {
-            // skip
-            curr_sequence++;
-            continue;
-        }
+            curr_seq++;
+            if (curr_seq >= num_seq) break; // ignore extra sequences, if any
 
-        if (curr_sequence < num_seq) {
-            size_t line_len = strlen(line);
+            // extract and store the sequence name
+            char *newline = strchr(line, '\n');
+            if (newline) *newline = '\0'; // remove newline with null terminator
 
-            // check if there is a newline char and replace with null terminator
-            if (line_len > 0 && line[line_len - 1] == '\n') {
-                line[line_len - 1] = '\0';
+            sequences[curr_seq].name = strdup(line + 1); // skip '>' part of the header -- allocate memory for name
+            if (!sequences[curr_seq].name) {
+                perror("Failed to allocate name memory");
+                fclose(file);
+                exit(1);
             }
-    
-            size_t curr_seq_len = strlen(sequences[curr_sequence]);
-            size_t curr_size = allocated_sizes[curr_sequence];
-            size_t needed_size = (curr_seq_len + line_len) * sizeof(char);
-            size_t realloc_size = needed_size * 2;
+        } 
+        else if (curr_seq >= 0 && curr_seq < num_seq) {
+            // process sequence data lines
+            size_t line_len = strlen(line);
+            if (line_len > 0 && line[line_len - 1] == '\n') {
+                line[line_len - 1] = '\0'; // remove newline
+            }
 
-            // if current sequence does not have enough space, reallocate
+            size_t curr_len = strlen(sequences[curr_seq].sequence);
+            size_t curr_size = allocated_sizes[curr_seq];
+            size_t needed_size = (curr_len + line_len) * sizeof(char);
+
+            // realloc if buffer is too small
             if (curr_size < needed_size) {
-                char *seq = (char*)realloc(sequences[curr_sequence], realloc_size);
-                if (seq == NULL) {
-                    perror("Failed to realloc memory for a sequence");
+                size_t new_size = needed_size * 2;
+                char *temp = realloc(sequences[curr_seq].sequence, new_size);
+                if (!temp) {
+                    perror("Failed to realloc sequence");
                     fclose(file);
                     exit(1);
                 }
-
-                sequences[curr_sequence] = seq;
-                allocated_sizes[curr_sequence] = realloc_size;
+                sequences[curr_seq].sequence = temp;
+                allocated_sizes[curr_seq] = new_size;
             }
 
-            strcat(sequences[curr_sequence], line); // add new line to the sequence
+            strcat(sequences[curr_seq].sequence, line);
         }
     }
 

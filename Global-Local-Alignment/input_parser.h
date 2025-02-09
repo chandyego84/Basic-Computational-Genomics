@@ -3,8 +3,9 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include "types.h"
 
-#define INITIAL_MAX_SEQ_SIZE 100
+#define INITIAL_MAX_SEQ_LEN 100
 
 // Prints command prompt guide for inputting params and configs.
 void print_usage();
@@ -20,7 +21,7 @@ int parse_alignment_type(const char *arg);
  * The header line is followed by the actual DNA sequence which is a string over the alphabet {a,c,g,t}. 
  * The sequence can span multiple lines and each line can variable number of characters (but no whitespaces or any other special characters).
  */
-char** read_sequence_inputs(const char *filename, const size_t num_seq);
+Sequence* read_sequence_inputs(const char *filename, const size_t num_seq);
 
 // Read configs for processing alignment
 void read_configs(const char *filename, int *match, int *mismatch, int *gap_open, int *gap_ext);
