@@ -96,7 +96,7 @@ Sequence* read_sequence_inputs(const char *filename, const size_t num_seq) {
     return sequences;
 }
 
-void read_configs(const char *filename, int *match, int *mismatch, int *gap_open, int *gap_ext) {
+void read_configs(const char *filename, ScoreConfig* scoreConfig) {
     FILE *file = fopen(filename, "r");
     if (!file) {
         perror("Error opening parameters config file");
@@ -108,13 +108,13 @@ void read_configs(const char *filename, int *match, int *mismatch, int *gap_open
 
     while (fscanf(file, "%s %d", param, &value) != EOF) {
         if (strcmp(param, "match") == 0) {
-            *match = value;
+            scoreConfig->ma = value;
         } else if (strcmp(param, "mismatch") == 0) {
-            *mismatch = value;
+            scoreConfig->mi = value;
         } else if (strcmp(param, "h") == 0) {  // gap opening
-            *gap_open = value;
+            scoreConfig->h = value;
         } else if (strcmp(param, "g") == 0) {  // gap extension
-            *gap_ext = value;
+            scoreConfig->g = value;
         }
     }
 

@@ -24,6 +24,6 @@ int parse_alignment_type(const char *arg);
 Sequence* read_sequence_inputs(const char *filename, const size_t num_seq);
 
 // Read configs for processing alignment
-void read_configs(const char *filename, int *match, int *mismatch, int *gap_open, int *gap_ext);
+void read_configs(const char *filename, ScoreConfig* scoreConfig);
 
 #endif
