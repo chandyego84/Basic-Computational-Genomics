@@ -39,8 +39,7 @@ int main(int argc, char* argv[]) {
     const char* seq2 = sequences[1].sequence;
 
     printf("\nGlobal Alignment Results!\n");
-    DP_cell** table = initTable(seq1, seq2);
-
+    DP_cell** table = initTable(seq1, seq2, scoreConfig);
 
     // free memory
     for (size_t i = 0; i < MAX_SEQUENCES; i++) {
