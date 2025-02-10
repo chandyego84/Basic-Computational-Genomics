@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include "input_parser.h"
-#include "global.h"
+#include "alignment.h"
 
 #define DEFAULT_CONFIG_FILE "parameters.config"
 #define MAX_SEQUENCES 2
@@ -32,7 +32,7 @@ int main(int argc, char* argv[]) {
 
     printf("\nSequences:\n");
     for (size_t i = 0; i < MAX_SEQUENCES; i++) {
-        printf("%s: %s\n", sequences[i].name, sequences[i].sequence);
+        printf("%s: %s - length = %zu\n", sequences[i].name, sequences[i].sequence, strlen(sequences[i].sequence));
     }
 
     const char* seq1 = sequences[0].sequence;
@@ -40,6 +40,11 @@ int main(int argc, char* argv[]) {
 
     printf("\nGlobal Alignment Results!\n");
     DP_cell** table = initTable(seq1, seq2, scoreConfig);
+    fillGlobalTable(table, seq1, seq2, scoreConfig);
+
+    // printTable(table, strlen(seq1) + 1, strlen(seq2) + 1);
+
+    performTraceback(table, seq1, seq2, scoreConfig);
 
     // free memory
     for (size_t i = 0; i < MAX_SEQUENCES; i++) {

@@ -3,7 +3,7 @@ CFLAGS = -Wall -g
 
 TARGET = sequence_alignment
 
-SRCS = main.c input_parser.c global.c
+SRCS = main.c input_parser.c alignment.c
 OBJS = $(SRCS:.c=.o)
 
 # Default target (build the executable)

@@ -14,6 +14,8 @@ typedef struct dp_cell {
     int Iscore; // insertion score
 } DP_cell;
 
+typedef enum {S_CASE, D_CASE, I_CASE} CaseType;
+
 typedef struct scoreConfig {
     int ma; // match
     int mi; // mismatch

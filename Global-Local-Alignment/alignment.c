@@ -1,10 +1,10 @@
-#include "global.h"
+#include "alignment.h"
 
 DP_cell** initTable(const char *str1, const char *str2, ScoreConfig scoreConfig) {
-    int m = strlen(str1) + 1;
-    int n = strlen(str2) + 1;
+    int m = strlen(str1) + 1; // +1: null 0,0 cell
+    int n = strlen(str2) + 1; // +1: null 0,0 cell
 
-    printf("There are %d elements in the table (%d * %d)\n", m*n, m, n);
+    printf("There are %d elements in the table\n", m*n);
 
     // allocate memory for rows
     DP_cell **table = (DP_cell**)malloc(m * sizeof(DP_cell*));
@@ -22,6 +22,13 @@ DP_cell** initTable(const char *str1, const char *str2, ScoreConfig scoreConfig)
         }
     }
 
+    return table;
+}
+
+void fillGlobalTable(DP_cell **table, const char *str1, const char *str2, ScoreConfig scoreConfig) {
+    int m = strlen(str1) + 1; // +1: null 0,0 cell
+    int n = strlen(str2) + 1; // +1: null 0,0 cell
+    
     // init null cell
     table[0][0].Sscore = 0;
     table[0][0].Dscore = 0;
@@ -66,9 +73,65 @@ DP_cell** initTable(const char *str1, const char *str2, ScoreConfig scoreConfig)
             );
         }
     }
-
-    return table;
 }
+
+void performTraceback(DP_cell **table, const char *seq1, const char *seq2, ScoreConfig scoreConfig) {
+    int m = strlen(seq1);
+    int n = strlen(seq2);
+    int maxAlignedSize = m + n + 1; // with null
+
+    // allocate memory for aligned strings
+    char *alignedStr1 = (char *)malloc(maxAlignedSize * sizeof(char));
+    char *alignedStr2 = (char *)malloc(maxAlignedSize * sizeof(char));
+
+    if (!alignedStr1 || !alignedStr2) {
+        perror("Memory allocation for aligned strings failed");
+        exit(1);
+    }
+
+    // traceback starting from last call (m,n)
+    traceback(table, seq1, seq2, m, n, scoreConfig, alignedStr1, alignedStr2, 0);
+
+    // Free memory
+    free(alignedStr1);
+    free(alignedStr2);
+}
+
+void traceback(DP_cell **table, const char *str1, const char *str2, int i, int j, ScoreConfig scoreConfig, char *alignedStr1, char *alignedStr2, int index) {
+    if (i == 0 && j == 0) {
+        // at starting cell
+
+    }
+
+    // get the max case (S, D, I)
+    DP_cell curr_cell = table[i][j];
+    CaseType max_Case = getMaxCaseFromCell(curr_cell);
+    
+}
+
+int getMaxScoreFromCell(DP_cell cell) {
+    return fmax(fmax(cell.Sscore, cell.Dscore), cell.Iscore);
+}
+
+// get the max case from a cell (S, D, I)
+CaseType getMaxCaseFromCell(DP_cell cell) {
+    // set substitution as initial max value
+    int max_value = cell.Sscore;
+    CaseType case_index = S_CASE;
+
+    if (cell.Dscore > max_value) {
+        max_value = cell.Dscore;
+        case_index = D_CASE;
+    }
+
+    if (cell.Iscore > max_value) {
+        max_value = cell.Iscore;
+        case_index = I_CASE;
+    }
+
+    return case_index;
+}
+
 
 void freeTable(DP_cell **table, int m) {
     for (int i = 0; i < m; i++) {
