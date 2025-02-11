@@ -19,7 +19,7 @@ void fillGlobalTable(DP_cell **table, const char *str1, const char *str2, ScoreC
 void performTraceback(DP_cell **table, const char *seq1, const char *seq2, ScoreConfig scoreConfig);
 
 // recursive traceback algo
-void traceback(DP_cell **table, const char *str1, const char *str2, int i, int j, ScoreConfig scoreConfig, char *alignedStr1, char *alignedStr2, int index);
+void traceback(DP_cell **table, const char *seq1, const char *seq2, int m, int n, ScoreConfig scoreConfig, char *alignedStr1, char *alignedStr2);
 
 // get the max score value from a cell
 int getMaxScoreFromCell(DP_cell cell);

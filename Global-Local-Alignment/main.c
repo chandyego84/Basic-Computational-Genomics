@@ -12,7 +12,7 @@ int main(int argc, char* argv[]) {
         //return 1;
     //}
 
-    char *input_file = (argv[1] == NULL) ? "test.fasta" : argv[1];
+    char *input_file = (argv[1] == NULL) ? "test2.fasta" : argv[1];
     // int alignment_type = (argv[2] == NULL ) ? 0 : parse_alignment_type(argv[2]);
     int alignment_type = 0;
     char *config_file = (argc > 3) ? argv[3] : DEFAULT_CONFIG_FILE;
@@ -32,19 +32,18 @@ int main(int argc, char* argv[]) {
 
     printf("\nSequences:\n");
     for (size_t i = 0; i < MAX_SEQUENCES; i++) {
-        printf("%s: %s - length = %zu\n", sequences[i].name, sequences[i].sequence, strlen(sequences[i].sequence));
+        printf("%s: %s (length = %zu)\n", sequences[i].name, sequences[i].sequence, strlen(sequences[i].sequence));
     }
 
     const char* seq1 = sequences[0].sequence;
     const char* seq2 = sequences[1].sequence;
 
-    printf("\nGlobal Alignment Results!\n");
+    printf("\n======GLOBAL ALIGNMENT RESULTS======\n");
     DP_cell** table = initTable(seq1, seq2, scoreConfig);
     fillGlobalTable(table, seq1, seq2, scoreConfig);
-
     // printTable(table, strlen(seq1) + 1, strlen(seq2) + 1);
-
     performTraceback(table, seq1, seq2, scoreConfig);
+    printf("=====================================\n");
 
     // free memory
     for (size_t i = 0; i < MAX_SEQUENCES; i++) {
