@@ -141,9 +141,11 @@ void traceback(DP_cell **table, const char *seq1, const char *seq2, int m, int n
             }
             else if (prevD_calculation == curr_cell.Sscore) {
                 next_case = D_CASE;
+                tracebackStats.g++;
             }
             else if (prevI_calculation == curr_cell.Sscore) {
                 next_case = I_CASE;
+                tracebackStats.g++;
             }
         }
 
