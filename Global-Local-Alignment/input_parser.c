@@ -93,6 +93,7 @@ Sequence* read_sequence_inputs(const char *filename, const size_t num_seq) {
 
     free(allocated_sizes);
     fclose(file);
+    
     return sequences;
 }
 

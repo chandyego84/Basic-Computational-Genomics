@@ -3,7 +3,6 @@
 #include "alignment.h"
 
 #define DEFAULT_CONFIG_FILE "parameters.config"
-#define MAX_SEQUENCES 2
 
 int main(int argc, char* argv[]) {
     // <executable> <input_sequence_file> <0: global, 1: local> <optional: path_to_parameters_config>
@@ -20,7 +19,7 @@ int main(int argc, char* argv[]) {
 
     read_configs(config_file, &scoreConfig);
 
-    Sequence *sequences = read_sequence_inputs(input_file, MAX_SEQUENCES);
+    Sequence *sequences = read_sequence_inputs(input_file, NUM_SEQ_PAIRWISE);
     if (!sequences) {
         fprintf(stderr, "Failed to read sequences from file.\n");
         return 1;
@@ -31,27 +30,16 @@ int main(int argc, char* argv[]) {
     printf("ma: %d, mi: %d, gapOpen: %d, gapExtension: %d\n", scoreConfig.ma, scoreConfig.mi, scoreConfig.h, scoreConfig.g);
 
     printf("\nSequences:\n");
-    for (size_t i = 0; i < MAX_SEQUENCES; i++) {
+    for (size_t i = 0; i < NUM_SEQ_PAIRWISE; i++) {
         printf("%s: %s (length = %zu)\n", sequences[i].name, sequences[i].sequence, strlen(sequences[i].sequence));
     }
 
-    const char* seq1 = sequences[0].sequence;
-    const char* seq2 = sequences[1].sequence;
-
     printf("\n======GLOBAL ALIGNMENT RESULTS======\n");
-    DP_cell** table = initTable(seq1, seq2, scoreConfig);
-    fillGlobalTable(table, seq1, seq2, scoreConfig);
-    // printTable(table, strlen(seq1) + 1, strlen(seq2) + 1);
-    performTraceback(table, seq1, seq2, scoreConfig);
+    runPairGlobalAlignment(sequences, scoreConfig);
     printf("=====================================\n");
 
     // free memory
-    for (size_t i = 0; i < MAX_SEQUENCES; i++) {
-        free(sequences[i].name);
-        free(sequences[i].sequence);
-    }
-    free(sequences);
-    freeTable(table, strlen(seq1));
+    free_sequences(sequences, NUM_SEQ_PAIRWISE);
     
     return 0;
 }

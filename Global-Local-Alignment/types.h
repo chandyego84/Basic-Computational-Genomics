@@ -16,13 +16,15 @@ typedef struct sequence {
 
 typedef enum {S_CASE, D_CASE, I_CASE} CaseType;
 
-// Basic traceback stats (count of matches, mismatches, open gaps, gap extensions)
-typedef struct report {
-    size_t ma;
-    size_t mi;
-    size_t h;
-    size_t g;
-} Report;
+// Basic traceback stats (count of matches, mismatches, gap opens, gap extensions)
+typedef struct tracebackStats {
+    Sequence* aligned_Sequences; // list of aligned sequences
+    int optimal_score; // pptimal alignment score determined at m,n cell
+    size_t ma; // # matches
+    size_t mi; // # mismatches
+    size_t h; // # gap opens
+    size_t g; // # gap extensions
+} TraceBackStats;
 
 typedef struct scoreConfig {
     int ma; // match

@@ -73,7 +73,11 @@ void fillGlobalTable(DP_cell **table, const char *str1, const char *str2, ScoreC
     }
 }
 
-void performTraceback(DP_cell **table, const char *seq1, const char *seq2, ScoreConfig scoreConfig) {
+TraceBackStats traceback(DP_cell **table, Sequence* sequences, ScoreConfig scoreConfig) {
+    // sequence strings
+    const char *seq1 = sequences[0].sequence;
+    const char *seq2 = sequences[1].sequence;
+
     int m = strlen(seq1);
     int n = strlen(seq2);
     int maxAlignedSize = m + n + 1; // with null
@@ -81,40 +85,31 @@ void performTraceback(DP_cell **table, const char *seq1, const char *seq2, Score
     // allocate memory for aligned strings
     char *alignedStr1 = (char *)malloc(maxAlignedSize * sizeof(char));
     char *alignedStr2 = (char *)malloc(maxAlignedSize * sizeof(char));
+    Sequence *aligned_sequences = (Sequence*)malloc(NUM_SEQ_PAIRWISE * sizeof(Sequence)); // allocate memory for sequence strings
 
-    if (!alignedStr1 || !alignedStr2) {
+    if (!alignedStr1 || !alignedStr2 || !aligned_sequences) {
         perror("Memory allocation for aligned strings failed");
         exit(1);
-    }
+    }    
 
-    // traceback starting from last call (m,n)
-    traceback(table, seq1, seq2, m, n, scoreConfig, alignedStr1, alignedStr2);
-    DP_cell optimal_cell = table[m][n];
+    // initialize aligned string sequences
+    aligned_sequences[0].name = strdup(sequences[0].name);
+    aligned_sequences[1].name = strdup(sequences[1].name);
+    aligned_sequences[0].sequence = alignedStr1;
+    aligned_sequences[1].sequence = alignedStr2;
 
-    printf("Global Alignment Score: %d\n", getMaxScoreFromCell(optimal_cell));
 
-    alignedStr1 = strrev(alignedStr1);
-    alignedStr2 = strrev(alignedStr2);
+    TraceBackStats tracebackStats = {aligned_sequences, 0, 0, 0, 0};
 
-    printf("Aligned S1: %s\n", alignedStr1);
-    printf("Aligned S2: %s\n", alignedStr2);
-
-    // Free memory
-    free(alignedStr1);
-    free(alignedStr2);
-}
-
-void traceback(DP_cell **table, const char *seq1, const char *seq2, int m, int n, ScoreConfig scoreConfig, char *alignedStr1, char *alignedStr2) {
     // start traceback from m,n cell
     DP_cell curr_cell = table[m][n];
     DP_cell prev_cell;
+    tracebackStats.optimal_score = getMaxScoreFromCell(curr_cell);
     CaseType next_case = getMaxCaseFromCell(curr_cell);
 
     size_t i = m; // current row position
     size_t j = n; // current column position
     size_t index = 0; // index for aligned strings
-
-    Report tracebackStats = {0, 0, 0, 0};
 
     while (i != 0 && j != 0) {
         // not at the null cell in top-left corner
@@ -211,16 +206,40 @@ void traceback(DP_cell **table, const char *seq1, const char *seq2, int m, int n
     // at end of traceback
     alignedStr1[index] = '\0';
     alignedStr2[index] = '\0';
+    alignedStr1 = strrev(alignedStr1);
+    alignedStr2 = strrev(alignedStr2);    
 
-    // Print or return the traceback stats
+    return tracebackStats;
+}
+
+void runPairGlobalAlignment(Sequence* sequences, ScoreConfig scoreConfig){
+    const char *seq1 = sequences[0].sequence;
+    const char *seq2 = sequences[1].sequence;
+    int m = strlen(seq1) + 1; // num of rows + null cell
+
+    DP_cell** table = initTable(seq1, seq2, scoreConfig);
+    fillGlobalTable(table, seq1, seq2, scoreConfig);
+    // printTable(table, strlen(seq1) + 1, strlen(seq2) + 1);
+    TraceBackStats tracebackStats = traceback(table, sequences, scoreConfig);
+    Sequence *alignedSequences = tracebackStats.aligned_Sequences;
+    Sequence alignedSeq1 = tracebackStats.aligned_Sequences[0];
+    Sequence alignedSeq2 = tracebackStats.aligned_Sequences[1];
+    
+    // print the traceback stats
+    printf("Aligned %s: %s\n", alignedSeq1.name, alignedSeq1.sequence);
+    printf("Aligned %s: %s\n", alignedSeq2.name, alignedSeq2.sequence);
+    printf("\nGlobal Optimal Score: %d\n", tracebackStats.optimal_score);
     printf("Matches: %zu\n", tracebackStats.ma);
     printf("Mismatches: %zu\n", tracebackStats.mi);
     printf("Gap opens: %zu\n", tracebackStats.h);
     printf("Gap extensions: %zu\n", tracebackStats.g);
-    
+
+    freeTable(table, m);
+    free_sequences(alignedSequences, NUM_SEQ_PAIRWISE);
 
     return;
 }
+
 
 int getMaxScoreFromCell(DP_cell cell) {
     return fmax(fmax(cell.Sscore, cell.Dscore), cell.Iscore);
@@ -245,8 +264,21 @@ CaseType getMaxCaseFromCell(DP_cell cell) {
     return case_index;
 }
 
+void free_sequences(Sequence *sequences, size_t num_seq) {
+    if (!sequences) return;
 
-void freeTable(DP_cell **table, int m) {
+    for (size_t i = 0; i < num_seq; i++) {
+            free(sequences[i].name);      
+            free(sequences[i].sequence);
+    }
+
+    free(sequences);  
+}
+
+
+void freeTable(DP_cell **table, size_t m) {
+    if (!table) return;
+
     for (int i = 0; i < m; i++) {
         free(table[i]);
     }

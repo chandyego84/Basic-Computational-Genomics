@@ -7,7 +7,8 @@
 #include <math.h>
 #include "types.h"
 
-#define NEG_INF -1000;
+#define NEG_INF -1000
+#define NUM_SEQ_PAIRWISE ((size_t)2)
 
 // initialize DP table
 DP_cell** initTable(const char *str1, const char *str2, ScoreConfig scoreConfig);
@@ -15,11 +16,11 @@ DP_cell** initTable(const char *str1, const char *str2, ScoreConfig scoreConfig)
 // fill in values of the cells of the global table
 void fillGlobalTable(DP_cell **table, const char *str1, const char *str2, ScoreConfig scoreConfig);
 
-// perform traceback to get aligned strings
-void performTraceback(DP_cell **table, const char *seq1, const char *seq2, ScoreConfig scoreConfig);
+// traceback algo
+TraceBackStats traceback(DP_cell **table, Sequence* sequences, ScoreConfig scoreConfig);
 
-// recursive traceback algo
-void traceback(DP_cell **table, const char *seq1, const char *seq2, int m, int n, ScoreConfig scoreConfig, char *alignedStr1, char *alignedStr2);
+// run global alignment algorithm and return aligned sequences
+void runPairGlobalAlignment(Sequence* sequences, ScoreConfig scoreConfig);
 
 // get the max score value from a cell
 int getMaxScoreFromCell(DP_cell cell);
@@ -27,8 +28,11 @@ int getMaxScoreFromCell(DP_cell cell);
 // get the max case from a cell(S, D, I)
 CaseType getMaxCaseFromCell(DP_cell cell);
 
-// free table
-void freeTable(DP_cell **table, int m);
+// free sequences memory
+void free_sequences(Sequence *sequences, size_t num_seq);
+
+// free table memory
+void freeTable(DP_cell **table, size_t m);
 
 // print table
 void printTable(DP_cell **table, int m, int n);
