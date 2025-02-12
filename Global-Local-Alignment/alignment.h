@@ -14,13 +14,13 @@
 DP_cell** initTable(const char *str1, const char *str2, ScoreConfig scoreConfig);
 
 // fill in values of the cells of the global table
-void fillGlobalTable(DP_cell **table, const char *str1, const char *str2, ScoreConfig scoreConfig);
+void fillTable(DP_cell **table, const char *str1, const char *str2, ScoreConfig scoreConfig);
 
 // traceback algo
 TraceBackStats traceback(DP_cell **table, Sequence* sequences, ScoreConfig scoreConfig);
 
 // run global alignment algorithm and return aligned sequences
-void runPairGlobalAlignment(Sequence* sequences, ScoreConfig scoreConfig);
+void runAlignment(Sequence* sequences, ScoreConfig scoreConfig);
 
 // get the max score value from a cell
 int getMaxScoreFromCell(DP_cell cell);

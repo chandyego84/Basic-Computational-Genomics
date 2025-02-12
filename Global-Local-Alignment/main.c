@@ -35,7 +35,7 @@ int main(int argc, char* argv[]) {
     }
 
     printf("\n======GLOBAL ALIGNMENT RESULTS======\n");
-    runPairGlobalAlignment(sequences, scoreConfig);
+    runAlignment(sequences, scoreConfig);
     printf("=====================================\n");
 
     // free memory

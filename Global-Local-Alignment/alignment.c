@@ -1,19 +1,19 @@
 #include "alignment.h"
 
 DP_cell** initTable(const char *str1, const char *str2, ScoreConfig scoreConfig) {
-    int m = strlen(str1) + 1; // +1: null 0,0 cell
-    int n = strlen(str2) + 1; // +1: null 0,0 cell
+    int m_rows = strlen(str1) + 1; // +1: null 0,0 cell
+    int n_cols = strlen(str2) + 1; // +1: null 0,0 cell
 
     // allocate memory for rows
-    DP_cell **table = (DP_cell**)malloc(m * sizeof(DP_cell*));
+    DP_cell **table = (DP_cell**)malloc(m_rows * sizeof(DP_cell*));
     if (!table) {
         perror("Failed to allocate memory for the table");
         exit(1);
     }
 
     // allocate memory for each column in the row
-    for (int i = 0; i < m; i++) {
-        table[i] = (DP_cell*)malloc(n * sizeof(DP_cell)); // segmentation fault
+    for (int i = 0; i < m_rows; i++) {
+        table[i] = (DP_cell*)malloc(n_cols * sizeof(DP_cell)); // segmentation fault
         if (!table[i]) {
             perror("Failed to allocate memory for columns in a row of the table");
             exit(1);
@@ -23,9 +23,9 @@ DP_cell** initTable(const char *str1, const char *str2, ScoreConfig scoreConfig)
     return table;
 }
 
-void fillGlobalTable(DP_cell **table, const char *str1, const char *str2, ScoreConfig scoreConfig) {
-    int m = strlen(str1) + 1; // +1: null 0,0 cell
-    int n = strlen(str2) + 1; // +1: null 0,0 cell
+void fillTable(DP_cell **table, const char *str1, const char *str2, ScoreConfig scoreConfig) {
+    int m_rows = strlen(str1) + 1; // +1: null 0,0 cell
+    int n_cols = strlen(str2) + 1; // +1: null 0,0 cell
     
     // init null cell
     table[0][0].Sscore = 0;
@@ -33,22 +33,22 @@ void fillGlobalTable(DP_cell **table, const char *str1, const char *str2, ScoreC
     table[0][0].Iscore = 0;
 
     // init s1 compared to null string: F(i,0)
-    for (int i = 1; i < m; i++) {
+    for (int i = 1; i < m_rows; i++) {
         table[i][0].Sscore = NEG_INF;
         table[i][0].Dscore = i * scoreConfig.g + scoreConfig.h;
         table[i][0].Iscore = NEG_INF;
     }
 
     // init s2 compared to null string: F(0, j)
-    for (int j = 1; j < n; j++) {
+    for (int j = 1; j < n_cols; j++) {
         table[0][j].Sscore = NEG_INF;
         table[0][j].Dscore = NEG_INF;
         table[0][j].Iscore = j * scoreConfig.g + scoreConfig.h;
     }
 
     // fill the rest of the table
-    for (int i = 1; i < m; i++) {
-        for (int j = 1; j < n; j++) {
+    for (int i = 1; i < m_rows; i++) {
+        for (int j = 1; j < n_cols; j++) {
             DP_cell *cell = &table[i][j];
 
             // S(i,j)
@@ -212,13 +212,14 @@ TraceBackStats traceback(DP_cell **table, Sequence* sequences, ScoreConfig score
     return tracebackStats;
 }
 
-void runPairGlobalAlignment(Sequence* sequences, ScoreConfig scoreConfig){
+void runAlignment(Sequence* sequences, ScoreConfig scoreConfig){
     const char *seq1 = sequences[0].sequence;
     const char *seq2 = sequences[1].sequence;
-    int m = strlen(seq1) + 1; // num of rows + null cell
+    int m_rows = strlen(seq1) + 1; // num of rows
 
     DP_cell** table = initTable(seq1, seq2, scoreConfig);
-    fillGlobalTable(table, seq1, seq2, scoreConfig);
+
+    fillTable(table, seq1, seq2, scoreConfig);
     // printTable(table, strlen(seq1) + 1, strlen(seq2) + 1);
     TraceBackStats tracebackStats = traceback(table, sequences, scoreConfig);
     Sequence *alignedSequences = tracebackStats.aligned_Sequences;
@@ -234,7 +235,7 @@ void runPairGlobalAlignment(Sequence* sequences, ScoreConfig scoreConfig){
     printf("Gap opens: %zu\n", tracebackStats.h);
     printf("Gap extensions: %zu\n", tracebackStats.g);
 
-    freeTable(table, m);
+    freeTable(table, m_rows);
     free_sequences(alignedSequences, NUM_SEQ_PAIRWISE);
 
     return;
