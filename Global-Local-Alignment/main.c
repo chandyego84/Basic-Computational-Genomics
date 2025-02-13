@@ -6,14 +6,13 @@
 
 int main(int argc, char* argv[]) {
     // <executable> <input_sequence_file> <0: global, 1: local> <optional: path_to_parameters_config>
-    // if (argc < 3) {
-      //  print_usage();
-        //return 1;
-    //}
+    if (argc < 3) {
+       print_usage();
+        return 1;
+    }
 
     char *input_file = (argv[1] == NULL) ? "test2.fasta" : argv[1];
-    // int alignment_type = (argv[2] == NULL ) ? 0 : parse_alignment_type(argv[2]);
-    int alignment_type = 0;
+    int alignment_type = (argv[2] == NULL ) ? 0 : parse_alignment_type(argv[2]);
     char *config_file = (argc > 3) ? argv[3] : DEFAULT_CONFIG_FILE;
     ScoreConfig scoreConfig;
 
@@ -34,9 +33,7 @@ int main(int argc, char* argv[]) {
         printf("%s: %s (length = %zu)\n", sequences[i].name, sequences[i].sequence, strlen(sequences[i].sequence));
     }
 
-    printf("\n======GLOBAL ALIGNMENT RESULTS======\n");
-    runAlignment(sequences, scoreConfig);
-    printf("=====================================\n");
+    runAlignment(sequences, scoreConfig, alignment_type);
 
     // free memory
     free_sequences(sequences, NUM_SEQ_PAIRWISE);

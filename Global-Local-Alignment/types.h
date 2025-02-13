@@ -7,6 +7,11 @@ typedef struct sequence {
     char *sequence;  // sequence data
  } Sequence;
 
+ typedef struct position {
+    size_t row;
+    size_t col;
+ } Position;
+
  // Struct to hold info of a cell in DP table
  typedef struct dp_cell {
     int Sscore; // substitution score
@@ -19,7 +24,7 @@ typedef enum {S_CASE, D_CASE, I_CASE} CaseType;
 // Basic traceback stats (count of matches, mismatches, gap opens, gap extensions)
 typedef struct tracebackStats {
     Sequence* aligned_Sequences; // list of aligned sequences
-    int optimal_score; // pptimal alignment score determined at m,n cell
+    int optimal_score; // optimal alignment score determined at m,n cell
     size_t ma; // # matches
     size_t mi; // # mismatches
     size_t h; // # gap opens
