@@ -14,10 +14,10 @@
 // initialize DP table
 DP_cell** initTable(const char *str1, const char *str2, ScoreConfig scoreConfig);
 
-// fill in values of the cells of the global table
+// fill in values of the cells of the table -- forward computation
 void fillTable(DP_cell **table, const char *str1, const char *str2, ScoreConfig scoreConfig, bool isLocalAlignment);
 
-// traceback algo
+// traceback algo -- retrace
 TraceBackStats traceback(DP_cell **table, Sequence* sequences, ScoreConfig scoreConfig, bool isLocalAlignment);
 
 // run global alignment algorithm and return aligned sequences

@@ -1,5 +1,7 @@
 #include "alignment.h"
 
+// TODO: SCORE FOR OPSIN LOCAL SHOULD BE 455
+
 DP_cell** initTable(const char *str1, const char *str2, ScoreConfig scoreConfig) {
     int m_rows = strlen(str1) + 1; // +1: null 0,0 cell
     int n_cols = strlen(str2) + 1; // +1: null 0,0 cell
@@ -29,21 +31,21 @@ void fillTable(DP_cell **table, const char *str1, const char *str2, ScoreConfig 
 
     // Initialize null cell
     table[0][0].Sscore = 0;
-    table[0][0].Dscore = NEG_INF;
-    table[0][0].Iscore = NEG_INF;
+    table[0][0].Dscore = 0;
+    table[0][0].Iscore = 0;
 
     // Initialize first column (s1 compared to null string)
     for (int i = 1; i < m_rows; i++) {
         table[i][0].Sscore = isLocalAlignment ? 0 : NEG_INF;
-        table[i][0].Dscore = isLocalAlignment ? 0 : i * scoreConfig.g + scoreConfig.h;
-        table[i][0].Iscore = NEG_INF;
+        table[i][0].Dscore = i * scoreConfig.g + scoreConfig.h;
+        table[i][0].Iscore = isLocalAlignment ? 0 : NEG_INF;
     }
 
     // Initialize first row (s2 compared to null string)
     for (int j = 1; j < n_cols; j++) {
         table[0][j].Sscore = isLocalAlignment ? 0 : NEG_INF;
-        table[0][j].Dscore = NEG_INF;
-        table[0][j].Iscore = isLocalAlignment ? 0 : j * scoreConfig.g + scoreConfig.h;
+        table[0][j].Dscore = isLocalAlignment ? 0 : NEG_INF;
+        table[0][j].Iscore = j * scoreConfig.g + scoreConfig.h;
     }
 
     // Fill the rest of the table
@@ -58,17 +60,15 @@ void fillTable(DP_cell **table, const char *str1, const char *str2, ScoreConfig 
                 table[i - 1][j - 1].Iscore + matchMismatchScore
             );
 
-            // D(i,j):
-            cell->Dscore = fmax(
-                table[i - 1][j].Sscore + scoreConfig.h + scoreConfig.g, // gap open
-                table[i - 1][j].Dscore + scoreConfig.g // gap extension
-            );
+            // D(i,j): gap in string 2
+            cell->Dscore = 
+                fmax(table[i - 1][j].Sscore + scoreConfig.h + scoreConfig.g, // gap open
+                table[i - 1][j].Dscore + scoreConfig.g);  // gap extension
 
-            // I(i,j)
-            cell->Iscore = fmax(
-                table[i][j - 1].Sscore + scoreConfig.h + scoreConfig.g, // gap open
-                table[i][j - 1].Iscore + scoreConfig.g // gap extension
-            );
+            // I(i,j): gap in string 1
+            cell->Iscore = 
+                fmax(table[i][j - 1].Sscore + scoreConfig.h + scoreConfig.g, // gap open
+                table[i][j - 1].Iscore + scoreConfig.g); // gap extension
 
             // condition for resetting scores to 0 for local alignment
             if (isLocalAlignment) {
@@ -79,6 +79,7 @@ void fillTable(DP_cell **table, const char *str1, const char *str2, ScoreConfig 
         }
     }
 }
+
 TraceBackStats traceback(DP_cell **table, Sequence* sequences, ScoreConfig scoreConfig, bool isLocalAlignment) {
     const char *seq1 = sequences[0].sequence;
     const char *seq2 = sequences[1].sequence;
@@ -226,7 +227,7 @@ void runAlignment(Sequence* sequences, ScoreConfig scoreConfig, bool isLocalAlig
     DP_cell** table = initTable(seq1, seq2, scoreConfig);
 
     fillTable(table, seq1, seq2, scoreConfig, isLocalAlignment);
-    //printTable(table, 20, 20);
+    // printTable(table, 20, 20);
     TraceBackStats tracebackStats = traceback(table, sequences, scoreConfig, isLocalAlignment);
     Sequence *alignedSequences = tracebackStats.aligned_Sequences;
 
@@ -244,7 +245,9 @@ Position getMaxPositionFromTable(DP_cell **table, size_t m, size_t n) {
 
     for (int i = 0; i < m; i++) {
         for (int j = 0; j < n; j++) {
-            if (getMaxScoreFromCell(table[i][j]) > max_score) {
+            int cellMaxScore = getMaxScoreFromCell(table[i][j]);
+            if (cellMaxScore > max_score) {
+                max_score = cellMaxScore;
                 max_pos.row = i;
                 max_pos.col = j;
             }
