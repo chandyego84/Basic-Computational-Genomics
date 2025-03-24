@@ -1,7 +1,5 @@
 #include "alignment.h"
 
-// TODO: SCORE FOR OPSIN LOCAL SHOULD BE 455
-
 DP_cell** initTable(const char *str1, const char *str2, ScoreConfig scoreConfig) {
     int m_rows = strlen(str1) + 1; // +1: null 0,0 cell
     int n_cols = strlen(str2) + 1; // +1: null 0,0 cell

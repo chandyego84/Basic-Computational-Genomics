@@ -41,7 +41,11 @@ Sequence* read_string_sequence(const char *filename, const size_t num_seq) {
     }
 
     int curr_seq = -1; // current sequence being processed
-    char line[256]; // buffer to hold current line being read
+    char line[600]; // buffer to hold current line being read
+    size_t line_len = 0;
+    size_t curr_len = 0;
+    size_t curr_size = 0;
+    size_t needed_size = 0;
 
     while (fgets(line, sizeof(line), file)) {
         if (line[0] == '>') {
@@ -61,14 +65,14 @@ Sequence* read_string_sequence(const char *filename, const size_t num_seq) {
         } 
         else if (curr_seq >= 0 && curr_seq < num_seq) {
             // process sequence data lines
-            size_t line_len = strlen(line);
+            line_len = strlen(line); 
             if (line_len > 0 && line[line_len - 1] == '\n') {
                 line[line_len - 1] = '\0'; // remove newline
             }
 
-            size_t curr_len = strlen(sequences[curr_seq].sequence);
-            size_t curr_size = allocated_sizes[curr_seq];
-            size_t needed_size = (curr_len + line_len) * sizeof(char);
+            curr_len = curr_len + line_len;
+            curr_size = allocated_sizes[curr_seq];
+            needed_size = (curr_len) * sizeof(char);
 
             // realloc if buffer is too small
             if (curr_size < needed_size) {
@@ -86,6 +90,17 @@ Sequence* read_string_sequence(const char *filename, const size_t num_seq) {
             strcat(sequences[curr_seq].sequence, line);
         }
     }
+    size_t seq_len = strlen(sequences[curr_seq].sequence);
+    
+    // ensure space for '$' and null terminator
+    char *temp = realloc(sequences[curr_seq].sequence, seq_len + 2);
+    if (!temp) {
+        perror("Failed to realloc for $ addition of sequence string");
+        exit(1);
+    }
+    sequences[curr_seq].sequence = temp;
+    sequences[curr_seq].sequence[seq_len] = '$';
+    sequences[curr_seq].sequence[seq_len + 1] = '\0';
 
     free(allocated_sizes);
     fclose(file);
