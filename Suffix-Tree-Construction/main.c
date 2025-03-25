@@ -21,6 +21,8 @@ int main(int argc, char* argv[]) {
     printf("Alphabet File: %s\n", alphabet_file);
     char* alphabet = read_alphabet(alphabet_file);
     puts(alphabet);
+
+    
     
     return 0;
 }

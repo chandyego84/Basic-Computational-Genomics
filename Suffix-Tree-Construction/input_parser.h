@@ -28,8 +28,4 @@ Sequence* read_string_sequence(const char *filename, const size_t num_seq);
 */
 char* read_alphabet(const char* filename);
 
-
-
-
-
 #endif

@@ -3,7 +3,7 @@ CFLAGS = -Wall -g
 
 TARGET = suffix_tree
 
-SRCS = main.c input_parser.c
+SRCS = main.c input_parser.c suffix_tree.c
 OBJS = $(SRCS:.c=.o)
 
 # Default target (build the executable)
