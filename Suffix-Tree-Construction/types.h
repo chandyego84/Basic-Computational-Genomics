@@ -4,7 +4,7 @@
 typedef enum bool {
     true,
     false
-} Bool;
+} bool;
 
 // Struct to hold a sequence name and corresponding string
 typedef struct sequence {
