@@ -2,21 +2,25 @@
 #define SUFFIX_TREE_H
 
 #include "types.h"
+#include <stdlib.h>
+#include <string.h>
+#include <stdio.h>
 
 // CreateNode
 /**
 * Initializes a node.
 * @alphabet_size: size of the alphabet (including $)
 */
-Node* create_node(unsigned int alphabet_size);
+Node* create_node(int alphabet_size);
 
 // GenerateNodeId
 /**
  * Generates an ID for a node depending on if its a leaf or not.
- * @is_leaf: True if node whose ID being generated is a leaf, otherwise False.
- * @suff_order: Starting index of current suffix being processed.
+ * @is_leaf: true if node whose ID being generated is a leaf, otherwise False.
+ * @suff_order: starting index of current suffix being processed.
+ * @str_len: length of the whole sequence string being processed; 
  */
-unsigned int generate_id(bool is_leaf, unsigned int suff_index);
+int generate_id(bool is_leaf, int suff_index, int str_len);
 
 /**
  * Given a character in an alphabet, gets the corresponding index in the children array of a node
@@ -37,7 +41,7 @@ int get_char_child_index(const char c, const char* alphabet);
  * @index: starting index of string
  * @alphabet: alphabet that string is comprised of
  */
-void find_path(Node* root, const char* sequence_string, unsigned int suff_index, const char* alphabet);
+void find_path(Node* root, const char* sequence_string, int suff_index, const char* alphabet);
 
 
 // NodeHops
@@ -54,21 +58,22 @@ void find_path(Node* root, const char* sequence_string, unsigned int suff_index,
  */
 Node* build_suffix_tree(const char* sequence_string, const char* alphabet);
 
-
+// PrintTree
+void print_suffix_tree(Node* node, const char* sequence_string, const char* alphabet, int str_len, int depth);
+void print_tree(Node* root, const char* sequence_string, const char* alphabet);
  
- // Display children left to right
- /**
-  * Given a pointer to a specific node u in the tree, display u's children from left to right
-  * @node_u: node whose children to display
-  */
+// Display children left to right
+/**
+ * Given a pointer to a specific node u in the tree, display u's children from left to right
+ * @node_u: node whose children to display
+ */
 
-  // Enumerate nodes using DFS
-  /**
-   * Using DFS, nodes will be enumerated in top-down fashion.
-   * As a result of this enumeration, displays STRING DEPTH info from each node.
-   * @node_r: starting/root node to enumerate the tree
+// Enumerate nodes using DFS
+/**
+* Using DFS, nodes will be enumerated in top-down fashion.
+* As a result of this enumeration, displays STRING DEPTH info from each node.
+* @node_r: starting/root node to enumerate the tree
 */
-
 
 // BWT index
 /**
