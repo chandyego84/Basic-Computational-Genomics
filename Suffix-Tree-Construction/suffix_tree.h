@@ -41,22 +41,73 @@ int get_char_child_index(const char c, const char* alphabet);
  * @index: starting index of string
  * @alphabet: alphabet that string is comprised of
  */
-void find_path(Node* root, const char* sequence_string, int suff_index, const char* alphabet);
-
+Node* find_path(Node* root, const char* sequence_string, int suff_index, const char* alphabet);
 
 // NodeHops
 /**
  * Does node hopping child to child until
  * string Beta (or Beta') is exhausted, depending on the case
+ * @v_prime: node start node hopping from
+ * @sequence_string: full sequence string
+ * @suff_index: starting index of suffing string to insert
+ * @beta: if u' is not root: beta = u.stringdepth. otherwise, beta = c + alpha between u and root.
+ * @returns: node v - node reached from node hopping
  */
+Node* node_hops(Node* v_prime, const char* sequence_string, int suff_index, const char* alphabet, int beta_len, int beta_start);
 
-// ST Construction
+/**
+ * Case: SL(u) is known.
+ * Inserts suffix string into ST.
+ * @u: parent of leaf i-1 during suffix index iteration of building ST
+ * @string: full sequence string 
+ * @suff_index: starting index of suffing string to insert
+ * @alphabet: alphabet that string is comprised of
+ */
+Node* suff_link_known(Node* u, const char* sequence_string, int suff_index, const char* alphabet);
+
+/**
+ * Case: SL(u) is unknown and u' (grandparent of leaf i-1) is not the root.
+ * Inserts suffix string into ST.
+ * @u: parent of leaf i-1 during suffix index iteration of building ST
+ * @string: full sequence string 
+ * @suff_index: starting index of suffing string to insert
+ * @alphabet: alphabet that string is comprised of
+ */
+Node* suff_link_unknown_internal(Node* u, const char* sequence_string, int suff_index, const char* alphabet);
+
+/**
+ * Case: SL(u) is unknown and u' (grandparent of leaf i-1) is the root.
+ * Inserts suffix string into ST.
+ * @u: parent of leaf i-1 during suffix index iteration of building ST
+ * @string: full sequence string 
+ * @suff_index: starting index of suffing string to insert
+ * @alphabet: alphabet that string is comprised of
+ */
+Node* suff_link_unknown_root(Node* u, const char* sequence_string, int suff_index, const char* alphabet);
+
+// ST Construction -- Naive or Linear
 /**
  * @sequence_string: input string to build ST of
  * @alphabet: alphabet related to input string to build ST with
  * @returns - root node of tree
  */
-Node* build_suffix_tree(const char* sequence_string, const char* alphabet);
+Node* build_suffix_tree(const char* sequence_string, const char* alphabet, bool is_naive);
+
+
+/***************
+ * PRINTING / TESTING CONSTRUCTION OF TREE FUNCTIONS
+ ****************/
+
+// Helper function to check if a node is a leaf
+// Assumes leaf IDs are 0...n-1
+bool is_leaf(Node* node, int str_len);
+
+// Helper function to check if a node is the root
+/**
+* Assumes the root node initialized its suff_link to itself already
+* @node: node to check
+ */
+bool is_root(Node* node);
 
 // PrintTree
 void print_suffix_tree(Node* node, const char* sequence_string, const char* alphabet, int str_len, int depth);

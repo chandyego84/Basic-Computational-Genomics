@@ -24,7 +24,7 @@ int main(int argc, char* argv[]) {
     puts(alphabet);
     printf("**************************************************\n");
     
-    Node* root = build_suffix_tree(seq_str, alphabet);
+    Node* root = build_suffix_tree(seq_str, alphabet, true);
     print_tree(root, seq_str, alphabet);
 
     return 0;

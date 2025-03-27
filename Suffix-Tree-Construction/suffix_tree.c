@@ -82,8 +82,9 @@ int get_char_child_index(const char c, const char* alphabet) {
  * @index: starting index of string
  * @alphabet: alphabet that string is comprised of
  */
-void find_path(Node* root, const char* sequence_string, int suff_index, const char* alphabet) {
+Node* find_path(Node* root, const char* sequence_string, int suff_index, const char* alphabet) {
     Node* v = root;
+    Node* last_internal = root;
     int curr_pos = suff_index;
     int alphabet_len = strlen(alphabet);
     int str_len = strlen(sequence_string);
@@ -102,6 +103,8 @@ void find_path(Node* root, const char* sequence_string, int suff_index, const ch
             new_leaf->parent = v;
             new_leaf->depth = v->depth + (new_leaf->edge_label[1] - new_leaf->edge_label[0] + 1);
             v->children[branch_i] = new_leaf;
+
+            // last internal node (non-leaf) inserted is still the root
             leaf_inserted = true;
         } 
         else {
@@ -154,17 +157,105 @@ void find_path(Node* root, const char* sequence_string, int suff_index, const ch
                 int leaf_branch = get_char_child_index(sequence_string[curr_pos], alphabet);
                 new_internal->children[leaf_branch] = new_leaf;
                 
+                last_internal = new_internal;
                 leaf_inserted = true;
             }
         }
     }
+
+    return last_internal;
 }
+
+/**
+ * Get beta for node hops
+ */
 
 // NodeHops
 /**
  * Does node hopping child to child until
  * string Beta (or Beta') is exhausted, depending on the case
+ * @v_prime: node start node hopping from
+ * @sequence_string: full sequence string
+ * @suff_index: starting index of suffing string to insert
+ * @beta_len: if u' is not root: beta = u.stringdepth. otherwise, beta = c + alpha between u and root.
+ * @beta_start: starting index position in the string according to beta edge from u.
+ * @returns: node v - node reached from node hopping
  */
+Node* node_hops(Node* v_prime, const char* sequence_string, int suff_index, const char* alphabet, int beta_len, int beta_start) {
+    Node* v = v_prime; // curr node in hopping process
+    int str_len = strlen(sequence_string);
+    int beta_counter = 0;
+    int str_pos = beta_start;
+
+    // hop until beta exhausted
+    while (str_pos < str_len) {
+        // find next node to hop to
+        int next_branch_index = get_char_child_index(sequence_string[str_pos], alphabet);
+        Node* next = v->children[next_branch_index];
+        
+        if (next != NULL) {
+            int curr_edge_start = v->edge_label[0];
+            int curr_edge_end = v->edge_label[1];
+            int curr_edge_len = curr_edge_end - curr_edge_start + 1;
+
+            // if taking this edge would exceed beta_len, STOP 
+            if (beta_counter + curr_edge_len > beta_len) break;
+
+            // otherwise, take full edge and move to next node
+            beta_counter += curr_edge_len;
+            str_pos += curr_edge_len;            
+            v = next;
+        }
+    }
+
+    return v;
+}
+
+/**
+ * Case: SL(u) is known.
+ * Inserts suffix string into ST.
+ * @u: parent of leaf i-1 during suffix index iteration of building ST
+ * @string: full sequence string 
+ * @suff_index: starting index of suffing string to insert
+ * @alphabet: alphabet that string is comprised of
+ */
+Node* suff_link_known(Node* u, const char* sequence_string, int suff_index, const char* alphabet) {
+    Node* v = u->suff_link;
+    Node* last_internal = v;
+    int str_len = strlen(sequence_string);
+    int k = v->depth;
+
+    if (suff_index + k < str_len) {
+        last_internal = find_path(v, sequence_string, suff_index + k, alphabet);
+    }
+
+    return last_internal;
+}
+
+/**
+ * Case: SL(u) is unknown and u' (grandparent of leaf i-1) is not the root.
+ * Inserts suffix string into ST.
+ * @u: parent of leaf i-1 during suffix index iteration of building ST
+ * @string: full sequence string 
+ * @suff_index: starting index of suffing string to insert
+ * @alphabet: alphabet that string is comprised of
+ */
+Node* suff_link_unknown_internal(Node* u, const char* sequence_string, int suff_index, const char* alphabet) {
+    Node* u_prime = u->parent;
+    Node* v_prime = u_prime->suff_link;
+    int u_start_edge = u->edge_label[0]; // to compare u_prime's child edge against v_prime's child edge
+    int beta_len = u->edge_label[1] - u->edge_label[0] + 1;
+
+    Node* v = node_hops(v_prime, sequence_string, suff_index, alphabet, beta_len, u_start_edge); // node reached after hopping
+    int alpha = v->depth;
+    Node* last_internal = find_path(v, sequence_string, suff_index + alpha, alphabet); 
+
+    return last_internal;
+}
+
+Node* suff_link_unknown_root(Node* u, const char* sequence_string, int suff_index, const char* alphabet) {
+    return NULL;
+}
 
 // ST Construction
 /**
@@ -172,31 +263,53 @@ void find_path(Node* root, const char* sequence_string, int suff_index, const ch
  * @alphabet: alphabet related to input string to build ST with
  * @returns - root node of tree
  */
-Node* build_suffix_tree(const char* sequence_string, const char* alphabet) {
+Node* build_suffix_tree(const char* sequence_string, const char* alphabet, bool is_naive) {
     int seq_len = strlen(sequence_string);
     int alphabet_size = strlen(alphabet);
     
     // create root node
     Node* root = create_node(alphabet_size);
-    root->parent = root; // root points to itself
+    root->suff_link = root;
     root->id = generate_id(false, 0, seq_len);
+
+    Node* u = root; // last inserted interal node
     
     // insert all suffixes
-    for (int suff_ind = 0; suff_ind < seq_len; suff_ind++) {
-        find_path(root, sequence_string, suff_ind, alphabet);
+    if (is_naive) {
+        for (int suff_ind = 0; suff_ind < seq_len; suff_ind++) {
+            Node* u = find_path(root, sequence_string, suff_ind, alphabet);
+        }
+    }
+    else {
+        for (int suff_ind = 0; suff_ind < seq_len; suff_ind++) {
+            // let u <- parent of leaf i-1 // need to update findpath algo
+            // based on the case, insert suff_i into T_i-1
+            // u already exists: do cases
+            // u is new: do cases
+        }
     }
 
     return root;
-
 }
 
 /***************
  * PRINTING / TESTING CONSTRUCTION OF TREE FUNCTIONS
+ ****************/
+
+// Helper function to check if a node is a leaf
+// Assumes leaf IDs are 0...n-1
+ bool is_leaf(Node* node, int str_len) {
+    return node->id < str_len; 
+}
+
+// Helper function to check if a node is the root
+/**
+ * Assumes the root node initialized its suff_link to itself already
+ * @node: node to check
  */
 
- // Helper function to check if a node is a leaf
-int is_leaf(Node* node, int str_len) {
-    return node->id < str_len; // Assuming your leaf IDs are 0...n-1
+bool is_root(Node* node) {
+    return node->suff_link == node;
 }
 
 void print_suffix_tree(Node* node, const char* sequence_string, const char* alphabet, int str_len, int depth) {
