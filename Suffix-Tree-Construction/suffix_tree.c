@@ -447,3 +447,104 @@ void print_tree(Node* root, const char* sequence_string, const char* alphabet) {
     print_suffix_tree(root, sequence_string, alphabet, str_len, 0);
     printf("\n");
 }
+
+// Display children left to right
+/**
+ * Given a pointer to a specific node u in the tree, display u's children from left to right
+ * @node_u: node whose children to display
+ */
+void display_children(Node* u, const char* alphabet) {
+    if (u == NULL) {
+        printf("Node is NULL\n");
+        return;
+    }
+
+    printf("Children of node %d: [", u->id);
+    
+    // Iterate through alphabet to maintain lexicographical order
+    for (int i = 0; i < strlen(alphabet); i++) {
+        int branch_index = get_char_child_index(alphabet[i], alphabet);
+        if (u->children[branch_index] != NULL) {
+            Node* child = u->children[branch_index];
+            printf(" %d(%c..%c)", child->id, 
+                   alphabet[i], 
+                   alphabet[i]); // All children start with their branch character
+        }
+    }
+    
+    printf(" ]\n");
+}
+
+// Enumerate nodes using DFS
+/**
+* Using DFS, nodes will be enumerated in top-down fashion.
+* As a result of this enumeration, displays STRING DEPTH info from each node.
+* @node_r: starting/root node to enumerate the tree
+*/
+void dfs_enumerate(Node* node_r, const char* sequence_string, const char* alphabet) {
+    if (node_r == NULL) return;
+ 
+    // print current node info
+    if (node_r->parent == node_r) {
+        printf("[Root id=%d, depth=%d]\n", node_r->id, node_r->depth);
+    } else {
+        printf("[Node id=%d, depth=%d, edge='", node_r->id, node_r->depth);
+        for (int i = node_r->edge_label[0]; i <= node_r->edge_label[1]; i++) {
+            printf("%c", sequence_string[i]);
+        }
+        printf("']\n");
+    }
+ 
+    // recursively visit children in lexicographical order
+    for (int i = 0; i < strlen(alphabet); i++) {
+        int branch_index = get_char_child_index(alphabet[i], alphabet);
+        if (node_r->children[branch_index] != NULL) {
+            dfs_enumerate(node_r->children[branch_index], sequence_string, alphabet);
+        }
+    }
+ }
+ 
+/**
+ * Uses DFS procedure to print the BWT index for input string s.
+ * BWT index is an array B of size n, given by B[i] = s[leaf(i) - 1],
+ * where leaf(i) is the suffix ID of the ith leaf in lexicographical order.
+ * If i = 0, then B[0] = $ (i.e., cycling around from the end of the string)
+ */
+void compute_bwt_index(Node* root, const char* sequence_string, const char* alphabet) {
+    int n = strlen(sequence_string);
+    char* BWT = (char*)malloc((n + 1) * sizeof(char)); // +1 for null terminator
+    int bwt_index = 0;
+
+    // stack for iterative DFS
+    Node** stack = (Node**)malloc(n * sizeof(Node*));
+    int stack_top = -1;
+    stack[++stack_top] = root; // init stack with
+
+    while (stack_top >= 0) {
+        Node* curr = stack[stack_top--];
+
+        // if leaf node, process it
+        if (is_leaf(curr, n)) {
+            int suffix_id = curr->id;
+            int bwt_pos = (suffix_id == 0) ? n - 1 : suffix_id - 1;
+            BWT[bwt_index++] = sequence_string[bwt_pos];
+        }
+
+        // push children in reverse lexicographical order (to process left-to-right when POPPING OFF!)
+        for (int i = strlen(alphabet) - 1; i >= 0; i--) {
+            int branch_index = get_char_child_index(alphabet[i], alphabet);
+            if (curr->children[branch_index] != NULL) {
+                stack[++stack_top] = curr->children[branch_index];
+            }
+        }
+    }
+
+    printf("BWT index: [ ");
+    for (int i = 0; i < n; i++) {
+        printf("%c ", BWT[i]);
+    }
+    printf("]\n");
+
+    free(BWT);
+    free(stack);
+}

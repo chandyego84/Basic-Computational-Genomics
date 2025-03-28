@@ -119,6 +119,7 @@ void print_tree(Node* root, const char* sequence_string, const char* alphabet);
  * Given a pointer to a specific node u in the tree, display u's children from left to right
  * @node_u: node whose children to display
  */
+void display_children(Node* u, const char* alphabet);
 
 // Enumerate nodes using DFS
 /**
@@ -126,6 +127,7 @@ void print_tree(Node* root, const char* sequence_string, const char* alphabet);
 * As a result of this enumeration, displays STRING DEPTH info from each node.
 * @node_r: starting/root node to enumerate the tree
 */
+void dfs_enumerate(Node* node_r, const char* sequence_string, const char* alphabet);
 
 // BWT index
 /**
@@ -135,5 +137,6 @@ void print_tree(Node* root, const char* sequence_string, const char* alphabet);
     * where leaf(i) is the suffix ID of the ith leaf in lexicographical order.
  * If i = 0, then B[0] = $ (i.e., cycling around from the end of the string)
  */
+void compute_bwt_index(Node* root, const char* sequence_string, const char* alphabet);
 
 #endif 

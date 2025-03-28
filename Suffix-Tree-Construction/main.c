@@ -25,7 +25,8 @@ int main(int argc, char* argv[]) {
     printf("**************************************************\n");
     
     Node* root = build_suffix_tree(seq_str, alphabet, false);
-    print_tree(root, seq_str, alphabet);
+    dfs_enumerate(root, seq_str, alphabet);
+    compute_bwt_index(root, seq_str, alphabet);
 
     return 0;
 }
