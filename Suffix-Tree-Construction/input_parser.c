@@ -40,7 +40,7 @@ Sequence* read_string_sequence(const char *filename, const size_t num_seq) {
         sequences[i].sequence[0] = '\0';
     }
 
-    int curr_seq = -1; // current sequence being processed
+    int curr_seq = -1; // current sequence being processed (as an index)
     char line[600]; // buffer to hold current line being read
     size_t line_len = 0;
     size_t curr_len = 0;
@@ -49,8 +49,12 @@ Sequence* read_string_sequence(const char *filename, const size_t num_seq) {
 
     while (fgets(line, sizeof(line), file)) {
         if (line[0] == '>') {
+            if ((curr_seq + 1) >= num_seq) {
+                // ignore extra sequences, if any
+                break; 
+            }
+            
             curr_seq++;
-            if (curr_seq >= num_seq) break; // ignore extra sequences, if any
 
             // extract and store the sequence name
             char *newline = strchr(line, '\n');

@@ -105,7 +105,6 @@ Node* find_path(Node* root, const char* sequence_string, int suff_index, int sta
             new_leaf->depth = v->depth + (new_leaf->edge_label[1] - new_leaf->edge_label[0] + 1);
             v->children[branch_i] = new_leaf;
 
-            // last internal node (non-leaf) inserted is still the root
             leaf_inserted = true;
         } 
         else {
@@ -158,7 +157,7 @@ Node* find_path(Node* root, const char* sequence_string, int suff_index, int sta
                 int leaf_branch = get_char_child_index(sequence_string[curr_pos], alphabet);
                 new_internal->children[leaf_branch] = new_leaf;
                 
-                last_internal = new_internal;
+                last_internal = last_internal;
                 leaf_inserted = true;
             }
         }
@@ -183,61 +182,89 @@ Node* find_path(Node* root, const char* sequence_string, int suff_index, int sta
  * @returns: node v - node reached from node hopping
  */
 Node* node_hops(Node* v_prime, const char* sequence_string, int suff_index, const char* alphabet, int beta_len, int beta_start) {
-    Node* v = v_prime; // curr node in hopping process
+    if (v_prime == NULL) {
+        fprintf(stderr, "Error: NULL v_prime parameter\n");
+        exit(1);
+    }
+
+    Node* v = v_prime;
     int str_len = strlen(sequence_string);
+    int alphabet_len = strlen(alphabet);
     int beta_counter = 0;
     int str_pos = beta_start;
 
-    // hop until beta exhausted
-    while (beta_counter < beta_len && str_pos < str_len) {
-        // find next node to hop to
-        int next_branch_index = get_char_child_index(sequence_string[str_pos], alphabet);
-        Node* next = v->children[next_branch_index];
-        
-        if (next != NULL) {
-            int edge_start = next->edge_label[0];
-            int edge_end = next->edge_label[1];
-            int edge_len = edge_end - edge_start + 1;
-            int remaining_beta = beta_len - beta_counter;
+    // validate beta_start position
+    if (beta_start < 0 || beta_start >= str_len) {
+        fprintf(stderr, "Error: Invalid beta_start position %d\n", beta_start);
+        exit(1);
+    }
 
-            // check if we need to break the edge
-            if (edge_len > remaining_beta) {
-                // split the edge
-                Node* new_internal = create_node(strlen(alphabet));
-                new_internal->id = generate_id(false, suff_index, str_len);
-                
-                // set up the new internal node
-                new_internal->edge_label[0] = edge_start;
-                new_internal->edge_label[1] = edge_start + remaining_beta - 1;
-                new_internal->parent = v;
-                new_internal->depth = v->depth + remaining_beta;
-                
-                // update the existing node
-                next->edge_label[0] = edge_start + remaining_beta;
-                next->parent = new_internal;
-                
-                // connect new internal node to existing node
-                int next_branch = get_char_child_index(sequence_string[edge_start + remaining_beta], alphabet);
-                new_internal->children[next_branch] = next;
-                
-                // update parent's child pointer to new internal
-                v->children[next_branch_index] = new_internal;
-                
-                // found v
-                v = new_internal;
-                break;
-            } 
-            else {
-                // take full edge and move to next node
-                beta_counter += edge_len;
-                str_pos += edge_len;            
-                v = next;
+    while (beta_counter < beta_len && str_pos < str_len) {
+        // get next character
+        char current_char = sequence_string[str_pos];
+        int next_branch_index = get_char_child_index(current_char, alphabet);
+        
+        // validate branch index
+        if (next_branch_index < 0 || next_branch_index >= alphabet_len) {
+            fprintf(stderr, "Error: Invalid character %c in sequence (not in alphabet)\n", current_char);
+            exit(1);
+        }
+
+        // get child node
+        Node* next = v->children[next_branch_index];
+        if (next == NULL) {
+            fprintf(stderr, "Error in node_hops: No child for character '%c' at position %d\n", 
+                    current_char, str_pos);
+            fprintf(stderr, "Current node ID: %d, depth: %d\n", v->id, v->depth);
+            fprintf(stderr, "Beta: len=%d, start=%d, counter=%d\n", beta_len, beta_start, beta_counter);
+            exit(1);
+        }
+
+        // validate edge labels
+        if (next->edge_label[0] < 0 || next->edge_label[1] >= str_len || 
+            next->edge_label[0] > next->edge_label[1]) {
+            fprintf(stderr, "Error: Invalid edge labels [%d,%d] for node %d\n",
+                    next->edge_label[0], next->edge_label[1], next->id);
+            exit(1);
+        }
+
+        int edge_len = next->edge_label[1] - next->edge_label[0] + 1;
+        int remaining_beta = beta_len - beta_counter;
+
+        if (edge_len > remaining_beta) {
+            // split edge - with additional validation
+            if (next->edge_label[0] + remaining_beta > next->edge_label[1]) {
+                fprintf(stderr, "Error: Invalid edge split position\n");
+                exit(1);
             }
+
+            Node* new_internal = create_node(alphabet_len);
+            new_internal->id = generate_id(false, suff_index, str_len);
+            new_internal->edge_label[0] = next->edge_label[0];
+            new_internal->edge_label[1] = next->edge_label[0] + remaining_beta - 1;
+            new_internal->parent = v;
+            new_internal->depth = v->depth + remaining_beta;
+
+            // update existing node
+            next->edge_label[0] += remaining_beta;
+            next->parent = new_internal;
+
+            // connect nodes
+            int split_char_index = get_char_child_index(sequence_string[next->edge_label[0]], alphabet);
+            if (split_char_index < 0 || split_char_index >= alphabet_len) {
+                fprintf(stderr, "Error: Invalid split character\n");
+                exit(1);
+            }
+            new_internal->children[split_char_index] = next;
+            v->children[next_branch_index] = new_internal;
+
+            v = new_internal;
+            break;
         } 
         else {
-            // should not happen if beta is correct
-            fprintf(stderr, "Error in node_hops: no child for character %c\n", sequence_string[str_pos]);
-            exit(1);
+            beta_counter += edge_len;
+            str_pos += edge_len;
+            v = next;
         }
     }
 
@@ -279,6 +306,9 @@ Node* suff_link_unknown_internal(Node* u, const char* sequence_string, int suff_
     int beta_len = u->edge_label[1] - u->edge_label[0] + 1;
 
     // find v by hopping along beta path
+    if (v_prime == NULL) {
+        printf("ERROR: V_prime is null @ suff_i %d\n", suff_index);
+    }
     Node* v = node_hops(v_prime, sequence_string, suff_index, alphabet, beta_len, u_start_edge);
     
     // set suffix link for u
@@ -309,6 +339,9 @@ Node* suff_link_unknown_root(Node* u, const char* sequence_string, int suff_inde
     int beta_start = u->edge_label[0] + 1;  // skip first character
     
     // Node hop from root following beta
+    if (u_prime == NULL) {
+        printf("ERROR: u_prime is null @ suff_i %d\n", suff_index);
+    }
     Node* v = node_hops(u_prime, sequence_string, suff_index, alphabet, beta_len, beta_start);
     
     // Set u's suffix link to v
@@ -348,11 +381,11 @@ Node* build_suffix_tree(const char* sequence_string, const char* alphabet, bool 
     else {
         // O(n) algorithm:
             // let u <- parent of leaf i-1
-        Node* last_internal = NULL;  // tracks last internal node created
+        Node* last_internal = NULL;  // tracks last node created (leaf)
         
         // insert suffixes
         for (int suff_ind = 0; suff_ind < seq_len; suff_ind++) {
-            Node* u = (last_internal != NULL) ? last_internal->parent : root;
+            Node* u = (last_internal != NULL) ? last_internal : root;
             
             if (u->suff_link != NULL) {
                 // case 1: SL(u) is known
@@ -360,12 +393,14 @@ Node* build_suffix_tree(const char* sequence_string, const char* alphabet, bool 
             } 
             else if (u != root) {
                 // case 2: SL(u) is unknown and u is not root
+
                 last_internal = suff_link_unknown_internal(u, sequence_string, suff_ind, alphabet);
                 
                 // set suffix link for the previous internal node if needed
-                if (last_internal != NULL && last_internal->suff_link == NULL) {
-                    last_internal->suff_link = u->suff_link;
-                }
+                // if (last_internal != NULL && last_internal->suff_link == NULL) {
+                //     printf("we are doing this?\n");
+                //     last_internal->suff_link = u->suff_link;
+                // }
             } 
             else {
                 // case 3: SL(u) is unknown and u is root
