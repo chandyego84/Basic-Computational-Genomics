@@ -545,7 +545,7 @@ void dfs_enumerate(Node* node_r, const char* sequence_string, const char* alphab
  * where leaf(i) is the suffix ID of the ith leaf in lexicographical order.
  * If i = 0, then B[0] = $ (i.e., cycling around from the end of the string)
  */
-void compute_bwt_index(Node* root, const char* sequence_string, const char* alphabet) {
+void compute_bwt_index(Node* root, const char* sequence_file, const char* sequence_string, const char* alphabet) {
     int n = strlen(sequence_string);
     char* BWT = (char*)malloc((n + 1) * sizeof(char)); // +1 for null terminator
     int bwt_index = 0;
@@ -574,12 +574,125 @@ void compute_bwt_index(Node* root, const char* sequence_string, const char* alph
         }
     }
 
-    printf("BWT index: [ ");
-    for (int i = 0; i < n; i++) {
-        printf("%c ", BWT[i]);
-    }
-    printf("]\n");
+    // generate output filename by appending "_BWT.txt" to the sequence file name
+    char output_filename[256];
+    snprintf(output_filename, sizeof(output_filename), "%.*s_bwt.txt",
+             (int)(strrchr(sequence_file, '.') ? strrchr(sequence_file, '.') - sequence_file : strlen(sequence_file)),
+             sequence_file);
 
+    // Write to file
+    FILE* file = fopen(output_filename, "w");
+    if (file == NULL) {
+        perror("Error opening file");
+        free(BWT);
+        free(stack);
+        return;
+    }
+
+    for (int i = 0; i < n; i++) {
+        fprintf(file, "%c\n", BWT[i]);
+    }
+
+    fclose(file);
+    printf("BWT output written to: %s\n", output_filename);
     free(BWT);
     free(stack);
+}
+
+void report_space_usage(Node* root, const char* seq_str, const char* alphabet) {
+    size_t input_bytes = strlen(seq_str);
+    size_t alphabet_size = strlen(alphabet);
+    
+    size_t node_count = input_bytes * 2;
+    
+    size_t node_size = sizeof(Node) + (alphabet_size * sizeof(Node*));
+    
+    // total estimated memory
+    size_t estimated_memory = node_count * node_size;
+    double space_constant = (double)estimated_memory / input_bytes;
+    
+    printf("Space Usage Estimate:\n");
+    printf("Input size: %zu bytes\n", input_bytes);
+    printf("Estimated tree memory: %zu bytes (~%.2f MB)\n", 
+           estimated_memory, estimated_memory/(1024.0*1024.0));
+    printf("Space constant: ~%.1f bytes per input byte\n", space_constant);
+}
+
+// helper function
+void find_longest_repeat(Node* node, const char* sequence, const char* alphabet, LongestRepeat* result, int current_depth) {
+    if (!node) return;
+
+    // update current depth with edge length
+    int edge_length = node->edge_label[1] - node->edge_label[0] + 1;
+    current_depth += edge_length;
+
+    // check if this is an internal node (>= 2 children)
+    int child_count = 0;
+    for (int i = 0; i < strlen(alphabet); i++) {
+        if (node->children[i]) child_count++;
+    }
+
+    if (child_count >= 2) {
+        if (current_depth > result->length) {
+            // found new longest repeat
+            result->length = current_depth;
+            free(result->positions);
+            result->positions = NULL;
+            result->count = 0;
+            
+            // collect all leaf positions under this node
+            collect_leaf_positions(node, sequence, alphabet, result);
+        }
+    }
+
+    // recurse check children
+    for (int i = 0; i < strlen(alphabet); i++) {
+        find_longest_repeat(node->children[i], sequence, alphabet, result, current_depth);
+    }
+}
+
+// helper function for finding repeats
+void collect_leaf_positions(Node* node, const char* sequence, const char* alphabet, LongestRepeat* result) {
+    if (!node) return;
+
+    if (is_leaf(node, strlen(sequence))) {
+        // found a leaf - add its position to results
+        result->positions = realloc(result->positions, (result->count + 1) * sizeof(int));
+        result->positions[result->count] = node->id;
+        result->count++;
+    } 
+    else {
+        // internal node - check children
+        for (int i = 0; i < strlen(alphabet); i++) {
+            collect_leaf_positions(node->children[i], sequence, alphabet, result);
+        }
+    }
+}
+
+// actual function to call to find repeats
+LongestRepeat find_repeats(Node* root, const char* sequence, const char* alphabet) {
+    LongestRepeat result = {0, NULL, 0};
+    find_longest_repeat(root, sequence, alphabet,  &result, 0);
+    return result;
+}
+
+void print_repeats(const LongestRepeat* repeat, const char* sequence) {
+    if (repeat->length == 0) {
+        printf("No repeats found.\n");
+        return;
+    }
+
+    printf("Longest exact repeat: '");
+    // Print the repeat substring
+    for (int i = 0; i < repeat->length; i++) {
+        printf("%c", sequence[repeat->positions[0] + i]);
+    }
+    printf("' (length %d)\n", repeat->length);
+
+    printf("Positions: ");
+    for (int i = 0; i < repeat->count; i++) {
+        printf("%d", repeat->positions[i]);
+        if (i < repeat->count - 1) printf(", ");
+    }
+    printf("\n");
 }

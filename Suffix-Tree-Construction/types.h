@@ -23,5 +23,11 @@ typedef struct sequence {
     int edge_label[2]; // [start_index, end_index], i.e., label of incoming edge from parent
  } Node;
 
+ typedef struct {
+    int length;
+    int* positions;
+    int count;
+} LongestRepeat;
+
 
 #endif 

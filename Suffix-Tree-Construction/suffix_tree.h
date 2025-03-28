@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
+#include <stddef.h>
 
 // CreateNode
 /**
@@ -137,6 +138,16 @@ void dfs_enumerate(Node* node_r, const char* sequence_string, const char* alphab
     * where leaf(i) is the suffix ID of the ith leaf in lexicographical order.
  * If i = 0, then B[0] = $ (i.e., cycling around from the end of the string)
  */
-void compute_bwt_index(Node* root, const char* sequence_string, const char* alphabet);
+void compute_bwt_index(Node* root, const char* sequence_file, const char* sequence_string, const char* alphabet);
+
+// estimating space usage according to seq string size
+void report_space_usage(Node* root, const char* seq_str, const char* alphabet);
+
+// finding longest repeated substrings
+void find_longest_repeat(Node* node, const char* sequence, const char* alphabet, LongestRepeat* result, int current_depth);
+void collect_leaf_positions(Node* node, const char* sequence, const char* alphabet, LongestRepeat* result);
+LongestRepeat find_repeats(Node* root, const char* sequence, const char* alphabet);
+void print_repeats(const LongestRepeat* repeat, const char* sequence);
+
 
 #endif 
