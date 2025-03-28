@@ -41,7 +41,7 @@ int get_char_child_index(const char c, const char* alphabet);
  * @index: starting index of string
  * @alphabet: alphabet that string is comprised of
  */
-Node* find_path(Node* root, const char* sequence_string, int suff_index, const char* alphabet);
+Node* find_path(Node* root, const char* sequence_string, int suff_index, int start_pos, const char* alphabet);
 
 // NodeHops
 /**
@@ -79,9 +79,10 @@ Node* suff_link_unknown_internal(Node* u, const char* sequence_string, int suff_
  * Case: SL(u) is unknown and u' (grandparent of leaf i-1) is the root.
  * Inserts suffix string into ST.
  * @u: parent of leaf i-1 during suffix index iteration of building ST
- * @string: full sequence string 
- * @suff_index: starting index of suffing string to insert
+ * @sequence_string: full sequence string 
+ * @suff_index: starting index of suffix string to insert
  * @alphabet: alphabet that string is comprised of
+ * @returns: last internal node created during insertion
  */
 Node* suff_link_unknown_root(Node* u, const char* sequence_string, int suff_index, const char* alphabet);
 
