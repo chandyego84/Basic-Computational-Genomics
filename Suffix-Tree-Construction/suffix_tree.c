@@ -348,21 +348,10 @@ Node* build_suffix_tree(const char* sequence_string, const char* alphabet, bool 
     else {
         // O(n) algorithm:
             // let u <- parent of leaf i-1
-
-        // special case: insert first suffix (entire string) manually
-        int first_char_index = get_char_child_index(sequence_string[0], alphabet);
-        Node* first_leaf = create_node(alphabet_size);
-        first_leaf->id = generate_id(true, 0, seq_len);
-        first_leaf->edge_label[0] = 0;
-        first_leaf->edge_label[1] = seq_len - 1;
-        first_leaf->parent = root;
-        first_leaf->depth = seq_len;
-        root->children[first_char_index] = first_leaf;
-
         Node* last_internal = NULL;  // tracks last internal node created
         
-        // insert remaining suffixes
-        for (int suff_ind = 1; suff_ind < seq_len; suff_ind++) {
+        // insert suffixes
+        for (int suff_ind = 0; suff_ind < seq_len; suff_ind++) {
             Node* u = (last_internal != NULL) ? last_internal->parent : root;
             
             if (u->suff_link != NULL) {
