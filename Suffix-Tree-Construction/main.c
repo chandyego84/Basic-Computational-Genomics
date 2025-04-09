@@ -12,8 +12,7 @@ int main(int argc, char* argv[]) {
     // }
 
     // get sequence file
-    char *sequence_file = (argc > 1) ? argv[1] : "Slyco.fas";
-    printf("Sequence File: %s\n", sequence_file);
+    char *sequence_file = (argc > 1) ? argv[1] : "chr12.fas";
     Sequence* sequence = read_string_sequence(sequence_file, NUM_SEQ_STRINGS);
     const char* seq_name = sequence[0].name;
     const char* seq_str = sequence[0].sequence;
@@ -38,6 +37,10 @@ int main(int argc, char* argv[]) {
 
     //dfs_enumerate(root, seq_str, alphabet);
     compute_bwt_index(root, sequence_file, seq_str, alphabet);
+    printf("**************************************************\n");
+
+    // stats
+    print_tree_stats(root, seq_str, alphabet, strlen(seq_str), 0);
     printf("**************************************************\n");
 
     // Find longest repeats

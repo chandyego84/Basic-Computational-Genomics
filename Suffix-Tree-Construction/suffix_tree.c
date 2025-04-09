@@ -483,6 +483,77 @@ void print_tree(Node* root, const char* sequence_string, const char* alphabet) {
     printf("\n");
 }
 
+/**
+ * Reports statistics about the suffix tree:
+ * - Number of internal nodes
+ * - Number of leaves
+ * - Total number of nodes
+ * - Average string-depth of internal nodes
+ * - String-depth of the deepest internal node
+ */
+void print_tree_stats(Node* node, const char* sequence_string, const char* alphabet, int str_len, int depth) {
+    // Initialize statistics variables
+    int internal_nodes = 0;
+    int leaves = 0;
+    int total_nodes = 0;
+    int total_internal_depth = 0;
+    int max_depth = 0;
+    
+    // Stack for iterative DFS traversal
+    Node** stack = (Node**)malloc(str_len * 2 * sizeof(Node*)); // Worst case: 2n nodes
+    int stack_top = -1;
+    stack[++stack_top] = node;
+    
+    while (stack_top >= 0) {
+        Node* current = stack[stack_top--];
+        total_nodes++;
+        
+        // Check if node is leaf or internal
+        if (is_leaf(current, str_len)) {
+            leaves++;
+        } else {
+            // Only count as internal if it's not the root and has children
+            int child_count = 0;
+            for (int i = 0; i < strlen(alphabet); i++) {
+                if (current->children[i] != NULL) {
+                    child_count++;
+                }
+            }
+            
+            if (child_count > 0 || is_root(current)) {
+                if (!is_root(current)) {
+                    internal_nodes++;
+                    total_internal_depth += current->depth;
+                    if (current->depth > max_depth) {
+                        max_depth = current->depth;
+                    }
+                }
+            }
+        }
+        
+        // Push children in reverse order for DFS
+        for (int i = strlen(alphabet) - 1; i >= 0; i--) {
+            if (current->children[i] != NULL) {
+                stack[++stack_top] = current->children[i];
+            }
+        }
+    }
+    
+    // Calculate average depth (avoid division by zero)
+    double avg_depth = (internal_nodes > 0) ? (double)total_internal_depth / internal_nodes : 0.0;
+    
+    // Print the statistics
+    printf("\nSuffix Tree Statistics:\n");
+    printf("-----------------------\n");
+    printf("Internal nodes: %d\n", internal_nodes);
+    printf("Leaves: %d\n", leaves);
+    printf("Total nodes: %d\n", total_nodes);
+    printf("Average string-depth of internal nodes: %.2f\n", avg_depth);
+    printf("String-depth of deepest internal node: %d\n", max_depth);
+        
+    free(stack);
+}
+
 // Display children left to right
 /**
  * Given a pointer to a specific node u in the tree, display u's children from left to right

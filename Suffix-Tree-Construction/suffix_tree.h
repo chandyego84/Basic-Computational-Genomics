@@ -114,6 +114,18 @@ bool is_root(Node* node);
 // PrintTree
 void print_suffix_tree(Node* node, const char* sequence_string, const char* alphabet, int str_len, int depth);
 void print_tree(Node* root, const char* sequence_string, const char* alphabet);
+
+// Stats
+/**
+ * Reports statistics about the suffix tree:
+ * - Number of internal nodes
+ * - Number of leaves
+ * - Total number of nodes
+ * - Average string-depth of internal nodes
+ * - String-depth of the deepest internal node
+ */
+void print_tree_stats(Node* node, const char* sequence_string, const char* alphabet, int str_len, int depth);
+
  
 // Display children left to right
 /**
