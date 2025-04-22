@@ -3,6 +3,9 @@
 #include <stdlib.h>
 #include <string.h>
 
+double total_suffix_tree_time = 0.0;
+double total_alignment_time = 0.0;
+
 SimilarityCell** compute_similarity_matrix(Sequence *sequences, int count, const char *alphabet) {
     fprintf(stderr, "DEBUG: Entering compute_similarity_matrix with %d sequences\n", count);
     
@@ -61,12 +64,26 @@ SimilarityCell compute_pair_similarity(const char *s1, const char *s2, const cha
     strcpy(concat, s1);
     strcat(concat, s2);
 
+    // START TIMER FOR SUFF TREE CONSTRUCTION
+    time_t start_time = time(NULL);
+    
     Node *root = build_suffix_tree(concat, alphabet, false);
     if (!root) {
         fprintf(stderr, "ERROR: Failed to build suffix tree\n");
         free(concat);
         return (SimilarityCell){0, 0};
     }
+
+    // END TIMER FOR ST CONSTRUCTION
+    time_t end_time = time(NULL);
+    double suffix_tree_time = difftime(end_time, start_time);
+    printf(BLUE "DEBUG: Suffix tree construction took %.2f seconds\n" RESET, suffix_tree_time);
+
+    // add to gloal ST TIME
+    total_suffix_tree_time += suffix_tree_time;
+
+    // START TIMER FOR ALIGNMENT
+    time_t start_alignment_time = time(NULL);
 
     // find LCS
     fprintf(stderr, "DEBUG: Finding longest common substring\n");
@@ -141,6 +158,13 @@ SimilarityCell compute_pair_similarity(const char *s1, const char *s2, const cha
     // align suffixes
     AlignmentResult suffix_align = global_align(suffix1, suffix2);
     int c = suffix_align.matches;
+
+    // END TIMER FOR ALIGNMENT        
+    time_t end_alignment_time = time(NULL);
+    double alignment_time = difftime(end_alignment_time, start_alignment_time);
+    printf(BLUE "DEBUG: Alignment computations took %.2f seconds\n" RESET, alignment_time);
+
+    total_alignment_time += alignment_time;    
 
     // clean up memory
     free(concat);

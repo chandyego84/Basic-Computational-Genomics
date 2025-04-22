@@ -3,6 +3,7 @@
 
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 #include "types.h"
 #include "suffix_tree.h"
 
@@ -11,6 +12,15 @@
 #define MISMATCH_PENALTY -2
 #define GAP_OPEN -5
 #define GAP_EXTEND -1
+
+// FOR COLORS ON STRING OUTPUTS :)
+#define RESET   "\x1b[0m"
+#define BLUE    "\x1b[34m"
+#define GREEN   "\x1b[32m"
+
+
+extern double total_suffix_tree_time;
+extern double total_alignment_time;
 
 SimilarityCell** compute_similarity_matrix(Sequence *sequences, int count, const char *alphabet);
 
